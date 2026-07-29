@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Overview{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block content %}
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+      <p class="text-slate-400 text-sm">Active Cameras</p>
+      <p class="text-3xl font-bold text-white mt-2">—</p>
+    </div>
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+      <p class="text-slate-400 text-sm">Alerts Today</p>
+      <p class="text-3xl font-bold text-white mt-2">—</p>
+    </div>
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+      <p class="text-slate-400 text-sm">Unknown Visitors</p>
+      <p class="text-3xl font-bold text-white mt-2">—</p>
+    </div>
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+      <p class="text-slate-400 text-sm">Threat Level</p>
+      <p class="text-3xl font-bold text-emerald-400 mt-2">Low</p>
+    </div>
+  </div>
+  <div class="mt-6 bg-slate-800 border border-slate-700 rounded-2xl p-8 text-slate-400">
+    Overview widgets will populate as we build each module.
+  </div>
+{% endblock %}

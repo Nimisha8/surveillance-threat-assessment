@@ -5,6 +5,7 @@ from .enhance import LowLightEnhancer
 from .detection import HumanDetector
 from .face_recognizer import FaceRecognizer
 from .tracker import CentroidTracker
+from .threat import ThreatEngine
 
 ENABLE_LOW_LIGHT = False
 ENABLE_MOTION = True
@@ -42,6 +43,7 @@ def generate_frames(source=0):
     recognizer = FaceRecognizer(tolerance=0.6, scale=0.25)
     tracker = CentroidTracker(max_disappeared=40, max_distance=80)
     object_tracker = CentroidTracker(max_disappeared=30, max_distance=60)
+    threat_engine = ThreatEngine()
 
     id_authorized = {}
     frame_count = 0
@@ -125,14 +127,33 @@ def generate_frames(source=0):
                     cv2.putText(frame, "UNATTENDED", (cx - 20, cy),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
+            # --- Threat scoring ---
+            per_person_unknown = len(unknown_ids)
+            frame_score = threat_engine.score(
+                is_unknown=len(unknown_ids) > 0,
+                is_loitering=len(loitering_ids) > 0,
+                unattended_count=len(unattended_ids),
+                unknown_count=per_person_unknown,
+            )
+            level, level_color = threat_engine.classify(frame_score)
+
+            # Banners
             y = 90
             for text, active in [("LOITERING DETECTED", loitering_ids),
                                  ("UNKNOWN VISITOR", unknown_ids),
                                  ("UNATTENDED OBJECT", unattended_ids)]:
                 if active:
                     cv2.putText(frame, text, (10, y),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-                    y += 30
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    y += 28
+
+            # Threat score box (top-right)
+            h, w = frame.shape[:2]
+            cv2.rectangle(frame, (w - 260, 10), (w - 10, 70), (0, 0, 0), -1)
+            cv2.putText(frame, f"THREAT: {level}", (w - 250, 35),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, level_color, 2)
+            cv2.putText(frame, f"Score: {frame_score}", (w - 250, 60),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, level_color, 2)
 
             success, buffer = cv2.imencode(".jpg", frame)
             if not success:

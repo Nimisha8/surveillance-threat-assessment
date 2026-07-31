@@ -1,8 +1,33 @@
-{% extends 'base.html' %}
+@'
+{% extends "base.html" %}
 {% block title %}Detection History{% endblock %}
 {% block page_title %}Detection History{% endblock %}
 {% block content %}
-<div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-slate-400">
-  Detection history log will appear here.
+<div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-900 text-slate-400">
+      <tr>
+        <th class="text-left px-6 py-3">Time</th>
+        <th class="text-left px-6 py-3">Type</th>
+        <th class="text-left px-6 py-3">Level</th>
+        <th class="text-left px-6 py-3">Score</th>
+        <th class="text-left px-6 py-3">Detail</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+      <tr class="border-t border-slate-700">
+        <td class="px-6 py-3 text-slate-300">{{ e.created_at|date:"M d, H:i:s" }}</td>
+        <td class="px-6 py-3 text-white">{{ e.event_type }}</td>
+        <td class="px-6 py-3">{{ e.level }}</td>
+        <td class="px-6 py-3 text-slate-300">{{ e.score }}</td>
+        <td class="px-6 py-3 text-slate-400">{{ e.detail }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">No events yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}
+'@ | Set-Content -Path templates\history.html -Encoding utf8

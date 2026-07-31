@@ -1,8 +1,17 @@
-{% extends 'base.html' %}
+@'
+{% extends "base.html" %}
 {% block title %}Unknown Visitors{% endblock %}
 {% block page_title %}Unknown Visitors{% endblock %}
 {% block content %}
-<div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-slate-400">
-  Unknown visitor log will appear here.
+<div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+  {% for e in events %}
+  <div class="flex justify-between border-b border-slate-700 py-3">
+    <span class="text-white">{{ e.detail }}</span>
+    <span class="text-slate-400">{{ e.created_at|date:"M d, H:i:s" }}</span>
+  </div>
+  {% empty %}
+  <p class="text-slate-500 text-center py-8">No unknown visitors logged yet.</p>
+  {% endfor %}
 </div>
 {% endblock %}
+'@ | Set-Content -Path templates\unknown.html -Encoding utf8

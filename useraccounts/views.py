@@ -14,30 +14,38 @@ def dashboard(request):
     }
     return render(request, "dashboard.html", ctx)
 
+
 @login_required
 def live_monitoring(request):
     return render(request, "live.html")
+
 
 @login_required
 def alerts(request):
     return render(request, "alerts.html", {"events": Event.objects.all()[:50]})
 
+
 @login_required
 def threats(request):
-    return render(request, "threats.html", {"events": Event.objects.all()[:50]})
+    events = Event.objects.filter(level__in=["HIGH", "CRITICAL"])[:50]
+    return render(request, "threats.html", {"events": events})
+
 
 @login_required
 def history(request):
     return render(request, "history.html", {"events": Event.objects.all()[:100]})
 
+
 @login_required
 def authorized_users(request):
     return render(request, "authorized.html", {"users": AuthorizedUser.objects.all()})
+
 
 @login_required
 def unknown_visitors(request):
     events = Event.objects.filter(event_type="Unknown Visitor")[:50]
     return render(request, "unknown.html", {"events": events})
+
 
 @login_required
 def analytics(request):
@@ -48,9 +56,11 @@ def analytics(request):
         "unattended": Event.objects.filter(event_type="Unattended Object").count(),
     })
 
+
 @login_required
 def settings_page(request):
     return render(request, "settings.html")
+
 
 @login_required
 def system_logs(request):

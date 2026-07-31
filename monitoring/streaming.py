@@ -6,6 +6,7 @@ from .detection import HumanDetector
 from .face_recognizer import FaceRecognizer
 from .tracker import CentroidTracker
 from .threat import ThreatEngine
+from .event_logger import EventLogger
 
 ENABLE_LOW_LIGHT = False
 ENABLE_MOTION = True
@@ -44,6 +45,7 @@ def generate_frames(source=0):
     tracker = CentroidTracker(max_disappeared=40, max_distance=80)
     object_tracker = CentroidTracker(max_disappeared=30, max_distance=60)
     threat_engine = ThreatEngine()
+    logger = EventLogger(cooldown=5)
 
     id_authorized = {}
     frame_count = 0
@@ -136,6 +138,14 @@ def generate_frames(source=0):
                 unknown_count=per_person_unknown,
             )
             level, level_color = threat_engine.classify(frame_score)
+
+            # Log meaningful events (throttled)
+            if loitering_ids:
+                logger.log("Loitering", level, frame_score, f"{len(loitering_ids)} person(s)")
+            if unknown_ids:
+                logger.log("Unknown Visitor", level, frame_score, f"{len(unknown_ids)} unknown")
+            if unattended_ids:
+                logger.log("Unattended Object", level, frame_score, f"{len(unattended_ids)} object(s)")
 
             # Banners
             y = 90

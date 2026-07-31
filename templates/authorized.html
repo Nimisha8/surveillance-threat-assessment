@@ -2,7 +2,15 @@
 {% block title %}Authorized Users{% endblock %}
 {% block page_title %}Authorized Users{% endblock %}
 {% block content %}
-<div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-slate-400">
-  Authorized-person management will appear here (Phase 5).
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+  {% for u in users %}
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 text-center">
+    {% if u.photo %}<img src="{{ u.photo.url }}" class="w-24 h-24 rounded-full mx-auto object-cover mb-3">{% endif %}
+    <p class="text-white font-medium">{{ u.name }}</p>
+    <p class="text-xs text-slate-500 mt-1">Enrolled {{ u.created_at|date:"M d" }}</p>
+  </div>
+  {% empty %}
+  <p class="text-slate-500 col-span-4 text-center py-8">No authorized users yet.</p>
+  {% endfor %}
 </div>
 {% endblock %}

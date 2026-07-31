@@ -2,7 +2,22 @@
 {% block title %}Analytics{% endblock %}
 {% block page_title %}Analytics{% endblock %}
 {% block content %}
-<div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-slate-400">
-  Charts and analytics will appear here (Phase 8).
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+    <p class="text-slate-400 text-sm">Total Events</p>
+    <p class="text-3xl font-bold text-white mt-2">{{ total }}</p>
+  </div>
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+    <p class="text-slate-400 text-sm">Loitering</p>
+    <p class="text-3xl font-bold text-yellow-400 mt-2">{{ loitering }}</p>
+  </div>
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+    <p class="text-slate-400 text-sm">Unknown Visitors</p>
+    <p class="text-3xl font-bold text-red-400 mt-2">{{ unknown }}</p>
+  </div>
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+    <p class="text-slate-400 text-sm">Unattended Objects</p>
+    <p class="text-3xl font-bold text-purple-400 mt-2">{{ unattended }}</p>
+  </div>
 </div>
 {% endblock %}

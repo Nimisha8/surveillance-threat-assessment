@@ -14,10 +14,9 @@ ENABLE_HUMAN = True
 ENABLE_FACE = True
 
 FACE_EVERY_N = 3
-LOITER_SECONDS = 8
+
 ASSUMED_FPS = 10
-UNKNOWN_MIN_SECONDS = 3
-UNATTENDED_SECONDS = 5          # object alone this long -> unattended
+        # object alone this long -> unattended
 PERSON_NEAR_DISTANCE = 150      # px; person within this = "attended"
 
 
@@ -36,15 +35,26 @@ def distance(p1, p2):
     return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
 
 
-def generate_frames(source=0):
+def generate_frames(source=0): 
+    from .models import SystemSettings
+    cfg = SystemSettings.load()
+    LOITER_SECONDS = cfg.loiter_seconds
+    UNKNOWN_MIN_SECONDS = cfg.unknown_seconds
+    UNATTENDED_SECONDS = cfg.unattended_seconds
     video = VideoSource(source)
-    detector = MotionDetector(threshold=25, min_area=500)
+    detector = MotionDetector(threshold=cfg.motion_threshold, min_area=500)
     enhancer = LowLightEnhancer(clip_limit=3.0, tile_size=8)
     human = HumanDetector(model_path="yolov8n.pt", conf_threshold=0.5)
     recognizer = FaceRecognizer(tolerance=0.6, scale=0.25)
     tracker = CentroidTracker(max_disappeared=40, max_distance=80)
     object_tracker = CentroidTracker(max_disappeared=30, max_distance=60)
     threat_engine = ThreatEngine()
+    threat_engine.WEIGHTS = {
+        "unknown": cfg.weight_unknown,
+        "loitering": cfg.weight_loitering,
+        "unattended": cfg.weight_unattended,
+        "multiple_unknown": 20,
+    }
     logger = EventLogger(cooldown=5)
 
     id_authorized = {}

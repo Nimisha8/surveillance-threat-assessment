@@ -59,7 +59,21 @@ def analytics(request):
 
 @login_required
 def settings_page(request):
-    return render(request, "settings.html")
+    from monitoring.models import SystemSettings
+    s = SystemSettings.load()
+    if request.method == "POST":
+        s.motion_threshold = int(request.POST.get("motion_threshold", s.motion_threshold))
+        s.loiter_seconds = int(request.POST.get("loiter_seconds", s.loiter_seconds))
+        s.unknown_seconds = int(request.POST.get("unknown_seconds", s.unknown_seconds))
+        s.unattended_seconds = int(request.POST.get("unattended_seconds", s.unattended_seconds))
+        s.weight_unknown = int(request.POST.get("weight_unknown", s.weight_unknown))
+        s.weight_loitering = int(request.POST.get("weight_loitering", s.weight_loitering))
+        s.weight_unattended = int(request.POST.get("weight_unattended", s.weight_unattended))
+        s.save()
+        saved = True
+    else:
+        saved = False
+    return render(request, "settings.html", {"s": s, "saved": saved})
 
 
 @login_required

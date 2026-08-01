@@ -2,7 +2,65 @@
 {% block title %}Settings{% endblock %}
 {% block page_title %}Settings{% endblock %}
 {% block content %}
-<div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-slate-400">
-  System configuration (sensitivity, thresholds, zones) will appear here.
+{% if saved %}
+<div class="mb-6 bg-green-500/10 border border-green-500/40 text-green-300 rounded-lg px-4 py-3">
+  Settings saved. Restart the video stream (reopen Live Monitoring) to apply.
 </div>
+{% endif %}
+
+<form method="post" class="space-y-8">
+  {% csrf_token %}
+
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+    <h3 class="text-white font-semibold mb-4">Detection Thresholds</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <label class="block">
+        <span class="text-sm text-slate-400">Motion sensitivity (lower = more sensitive)</span>
+        <input type="number" name="motion_threshold" value="{{ s.motion_threshold }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-400">Loitering time (seconds)</span>
+        <input type="number" name="loiter_seconds" value="{{ s.loiter_seconds }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-400">Unknown visitor time (seconds)</span>
+        <input type="number" name="unknown_seconds" value="{{ s.unknown_seconds }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-400">Unattended object time (seconds)</span>
+        <input type="number" name="unattended_seconds" value="{{ s.unattended_seconds }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+    </div>
+  </div>
+
+  <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+    <h3 class="text-white font-semibold mb-4">Threat Score Weights</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <label class="block">
+        <span class="text-sm text-slate-400">Unknown visitor</span>
+        <input type="number" name="weight_unknown" value="{{ s.weight_unknown }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-400">Loitering</span>
+        <input type="number" name="weight_loitering" value="{{ s.weight_loitering }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-400">Unattended object</span>
+        <input type="number" name="weight_unattended" value="{{ s.weight_unattended }}"
+               class="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+      </label>
+    </div>
+  </div>
+
+  <button type="submit"
+          class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-2.5 rounded-lg">
+    Save Settings
+  </button>
+</form>
 {% endblock %}

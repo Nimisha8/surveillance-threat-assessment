@@ -1,6 +1,3 @@
-
-
-Readme · MD
 Smart Surveillance & Threat Assessment System
 A real-time surveillance system that goes beyond simple recognition — it detects people, recognizes authorized users, analyzes suspicious behavior, computes a configurable threat score, and alerts the owner with visual evidence. Built with Django, OpenCV, YOLO, and face recognition.
 

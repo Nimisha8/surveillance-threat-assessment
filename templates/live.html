@@ -8,10 +8,61 @@
       <span class="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse"></span>
       <span class="text-sm text-slate-300">LIVE</span>
     </div>
-    <span class="text-xs text-slate-500">Source: Webcam</span>
+    <div class="flex items-center gap-4">
+      <span id="alertStatus" class="text-xs text-slate-400">Notifications: requesting…</span>
+      <span class="text-xs text-slate-500">Source: Webcam</span>
+    </div>
   </div>
   <div class="rounded-xl overflow-hidden bg-black flex items-center justify-center">
     <img src="{% url 'video_feed' %}" alt="Live feed" class="max-w-full">
   </div>
 </div>
+
+<script>
+  // Ask permission for desktop notifications
+  const statusEl = document.getElementById('alertStatus');
+  if ("Notification" in window) {
+    Notification.requestPermission().then(p => {
+      statusEl.textContent = p === "granted"
+        ? "Notifications: on" : "Notifications: blocked";
+    });
+  }
+
+  let lastAlertId = null;
+  let firstCheck = true;
+
+  async function checkThreat() {
+    try {
+      const res = await fetch("{% url 'latest_threat' %}");
+      const data = await res.json();
+      if (data.id === null) return;
+
+      // On first load, just record the current latest so we don't alert on old events
+      if (firstCheck) {
+        lastAlertId = data.id;
+        firstCheck = false;
+        return;
+      }
+
+      // New event since last check, and it's serious?
+      if (data.id !== lastAlertId &&
+          (data.level === "HIGH" || data.level === "CRITICAL")) {
+        lastAlertId = data.id;
+        if (Notification.permission === "granted") {
+          new Notification("⚠ Threat Detected: " + data.level, {
+            body: data.type + " — " + data.detail + " (score " + data.score + ")",
+          });
+        }
+      } else {
+        lastAlertId = data.id;
+      }
+    } catch (e) {
+      console.error("threat check failed", e);
+    }
+  }
+
+  // Poll every 3 seconds
+  setInterval(checkThreat, 3000);
+  checkThreat();
+</script>
 {% endblock %}

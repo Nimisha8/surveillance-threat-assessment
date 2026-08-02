@@ -14,10 +14,9 @@ ENABLE_HUMAN = True
 ENABLE_FACE = True
 
 FACE_EVERY_N = 3
-
+HUMAN_EVERY_N = 2          # run YOLO every 2nd frame for stability/speed
 ASSUMED_FPS = 10
-        # object alone this long -> unattended
-PERSON_NEAR_DISTANCE = 150      # px; person within this = "attended"
+PERSON_NEAR_DISTANCE = 150
 
 
 def point_in_box(point, box):
@@ -35,12 +34,13 @@ def distance(p1, p2):
     return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
 
 
-def generate_frames(source=0): 
+def generate_frames(source=0):
     from .models import SystemSettings
     cfg = SystemSettings.load()
     LOITER_SECONDS = cfg.loiter_seconds
     UNKNOWN_MIN_SECONDS = cfg.unknown_seconds
     UNATTENDED_SECONDS = cfg.unattended_seconds
+
     video = VideoSource(source)
     detector = MotionDetector(threshold=cfg.motion_threshold, min_area=500)
     enhancer = LowLightEnhancer(clip_limit=3.0, tile_size=8)
@@ -60,12 +60,19 @@ def generate_frames(source=0):
     id_authorized = {}
     frame_count = 0
     last_faces = []
+    person_boxes = []
+    object_boxes = []
+    consecutive_failures = 0        # <-- the missing initialization
 
     try:
         while True:
             frame = video.read()
             if frame is None:
-                break
+                consecutive_failures += 1
+                if consecutive_failures > 30:
+                    break
+                continue
+            consecutive_failures = 0
 
             frame_count += 1
 
@@ -74,9 +81,8 @@ def generate_frames(source=0):
             if ENABLE_MOTION:
                 frame, motion = detector.process(frame)
 
-            person_boxes = []
-            object_boxes = []
-            if ENABLE_HUMAN:
+            # Run YOLO only every Nth frame; reuse boxes in between
+            if ENABLE_HUMAN and frame_count % HUMAN_EVERY_N == 0:
                 frame, people, person_boxes, object_boxes = human.detect(frame)
 
             if ENABLE_FACE and frame_count % FACE_EVERY_N == 0:
@@ -84,7 +90,6 @@ def generate_frames(source=0):
 
             tracked = tracker.update(person_boxes)
 
-            # associate faces -> person IDs
             id_to_box = {}
             for object_id, (centroid, frames_seen) in tracked.items():
                 for b in person_boxes:
@@ -122,24 +127,20 @@ def generate_frames(source=0):
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
                 cv2.circle(frame, (cx, cy), 4, color, -1)
 
-            # --- Unattended object logic ---
             obj_tracked = object_tracker.update(object_boxes)
             person_centers = [box_center(b) for b in person_boxes]
             unattended_ids = []
             for obj_id, (centroid, frames_seen) in obj_tracked.items():
                 seconds_present = frames_seen / ASSUMED_FPS
-                # nearest person distance
                 nearest = min((distance(centroid, pc) for pc in person_centers), default=99999)
                 attended = nearest <= PERSON_NEAR_DISTANCE
                 is_unattended = (not attended) and seconds_present >= UNATTENDED_SECONDS
-
                 cx, cy = centroid
                 if is_unattended:
                     unattended_ids.append(obj_id)
                     cv2.putText(frame, "UNATTENDED", (cx - 20, cy),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-            # --- Threat scoring ---
             per_person_unknown = len(unknown_ids)
             frame_score = threat_engine.score(
                 is_unknown=len(unknown_ids) > 0,
@@ -149,15 +150,13 @@ def generate_frames(source=0):
             )
             level, level_color = threat_engine.classify(frame_score)
 
-            # Log meaningful events (throttled)
             if loitering_ids:
-                logger.log("Loitering", level, frame_score, f"{len(loitering_ids)} person(s)")
+                logger.log("Loitering", level, frame_score, f"{len(loitering_ids)} person(s)", frame=frame)
             if unknown_ids:
-                logger.log("Unknown Visitor", level, frame_score, f"{len(unknown_ids)} unknown")
+                logger.log("Unknown Visitor", level, frame_score, f"{len(unknown_ids)} unknown", frame=frame)
             if unattended_ids:
-                logger.log("Unattended Object", level, frame_score, f"{len(unattended_ids)} object(s)")
+                logger.log("Unattended Object", level, frame_score, f"{len(unattended_ids)} object(s)", frame=frame)
 
-            # Banners
             y = 90
             for text, active in [("LOITERING DETECTED", loitering_ids),
                                  ("UNKNOWN VISITOR", unknown_ids),
@@ -167,7 +166,6 @@ def generate_frames(source=0):
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                     y += 28
 
-            # Threat score box (top-right)
             h, w = frame.shape[:2]
             cv2.rectangle(frame, (w - 260, 10), (w - 10, 70), (0, 0, 0), -1)
             cv2.putText(frame, f"THREAT: {level}", (w - 250, 35),

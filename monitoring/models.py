@@ -11,6 +11,8 @@ class Event(models.Model):
     score = models.IntegerField(default=0)
     detail = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    snapshot = models.ImageField(upload_to="snapshots/", blank=True, null=True)
+
 
     class Meta:
         ordering = ["-created_at"]
@@ -26,6 +28,7 @@ class SystemSettings(models.Model):
     weight_unknown = models.IntegerField(default=40)
     weight_loitering = models.IntegerField(default=25)
     weight_unattended = models.IntegerField(default=30)
+    
 
     def __str__(self):
         return "System Settings"
